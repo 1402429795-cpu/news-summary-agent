@@ -1,0 +1,41 @@
+name: 每日资讯推送
+
+on:
+  schedule:
+    - cron: '0 23 * * *'  # 北京时间每天 07:00（UTC+8）
+  workflow_dispatch:        # 支持手动触发
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 配置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 安装 Python 依赖
+        run: pip install -r requirements.txt
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装飞书 CLI
+        run: npm install -g @larksuite/cli --strict-ssl=false
+
+      - name: 配置飞书应用凭证
+        env:
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+        run: echo "$FEISHU_APP_SECRET" | lark-cli config init --app-id cli_aaa0886f06b89cd8 --app-secret-stdin --brand feishu
+
+      - name: 运行资讯推送
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: python pipeline.py
