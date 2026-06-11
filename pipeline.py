@@ -4,6 +4,8 @@ from scrapers import kr36, huxiu
 from ai.summarizer import summarize
 from feishu.bitable import save_articles
 from feishu.messenger import send_daily_summary
+from analysis.analyzer import analyze
+from analysis.report import send_analysis_card
 
 
 def run():
@@ -24,7 +26,7 @@ def run():
         print("[pipeline] 无数据，退出")
         return
 
-    # 2. AI 摘要
+    # 2. AI 摘要 + 分类
     print(f"[pipeline] 开始生成摘要，共 {len(articles)} 条...")
     articles = summarize(articles)
 
@@ -32,8 +34,13 @@ def run():
     saved = save_articles(articles)
     print(f"[pipeline] 写入多维表格 {saved}/{len(articles)} 条")
 
-    # 4. 发送飞书消息
+    # 4. 发送每日资讯卡片
     send_daily_summary(articles, today)
+
+    # 5. 从多维表格读取数据 → 分析 → 发送分析报告
+    print("[pipeline] 开始分析...")
+    result = analyze(today)
+    send_analysis_card(result)
 
     print("[pipeline] 完成")
 
