@@ -1,9 +1,18 @@
 import feedparser
+from bs4 import BeautifulSoup
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from .base import Article
 
 RSS_URL = "https://www.ithome.com/rss/"
+
+
+def _extract_body(entry) -> str:
+    html = entry.get("summary", "") or entry.get("description", "")
+    if not html:
+        return ""
+    text = BeautifulSoup(html, "html.parser").get_text(separator=" ", strip=True)
+    return text[:2000]
 
 
 def fetch(max_articles: int = 10) -> list[Article]:
@@ -24,6 +33,7 @@ def fetch(max_articles: int = 10) -> list[Article]:
             url=entry.link,
             source="虎嗅",
             published_at=published_at,
+            body=_extract_body(entry),
         ))
 
     return articles

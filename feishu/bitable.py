@@ -4,7 +4,16 @@ from datetime import datetime
 from config.settings import FEISHU_BASE_TOKEN, FEISHU_TABLE_ID
 from scrapers.base import Article
 
-FIELDS = ["标题", "来源", "原文链接", "摘要", "关键词", "抓取日期"]
+FIELDS = ["标题", "来源", "原文链接", "摘要", "关键词", "分类", "抓取日期"]
+
+VALID_CATEGORIES = ["AI/大模型", "芯片/硬件", "互联网/平台", "出海/国际", "消费电子", "政策/监管", "其他"]
+
+
+def _normalize_category(cat: str) -> str:
+    for valid in VALID_CATEGORIES:
+        if valid in cat or cat in valid:
+            return valid
+    return "其他"
 
 
 def save_articles(articles: list[Article]) -> int:
@@ -17,6 +26,7 @@ def save_articles(articles: list[Article]) -> int:
             article.url,
             article.summary,
             " / ".join(article.keywords) if article.keywords else "",
+            _normalize_category(article.category),
             now_str,
         ])
 
